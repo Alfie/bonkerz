@@ -2,7 +2,6 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import React, { useEffect, useState} from "react";
 import { fetcher, useDataFetch } from "@utils/use-data-fetch";
 import { ItemList } from "@components/home/item-list";
-import { ActionList } from "@components/home/action-list";
 import { ItemData } from "@components/home/item";
 import { Button, ButtonState } from "@components/home/button";
 import { toast } from "react-hot-toast";
