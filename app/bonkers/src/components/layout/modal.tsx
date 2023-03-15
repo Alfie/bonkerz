@@ -9,6 +9,7 @@ type Props = {
   buttonContent: string;
   isToken?: boolean;
   id: string;
+  txType: number;
 };
 
 export function Modal({
@@ -18,6 +19,7 @@ export function Modal({
   buttonContent,
   isToken = false,
   id,
+  txType,
 }: Props) {
   const [address, setAddress] = React.useState<string | undefined>();
   const [amount, setAmount] = React.useState<string | undefined>();
@@ -57,6 +59,7 @@ export function Modal({
                 isToken,
                 address,
                 amount,
+                txType,
               })}
               className="btn-primary"
             >
@@ -67,4 +70,102 @@ export function Modal({
       </label>
     </>
   );
+}
+
+export function TestModal({
+  onClick,
+  butttonState,
+  headerContent,
+  buttonContent,
+  isToken = false,
+  id,
+  txType,
+}: Props) {
+  const [address, setAddress] = React.useState<string | undefined>();
+  const [amount, setAmount] = React.useState<string | undefined>();
+
+  return (
+    <>
+    <input type="checkbox" id={id} className="modal-toggle" />
+      <label htmlFor={id} className="modal cursor-pointer">
+        <label className="modal-box relative" htmlFor="">
+          <h3 className="font-bold text-xl mb-2">{headerContent}</h3>
+          <div className="form-control w-full mb-2">
+            <label className="label">
+              <span className="label-text">Mint Address</span>
+            </label>
+            <input
+              type="text"
+              placeholder={DEFAULT_WALLET}
+              className="input input-bordered w-full"
+              onChange={(ev) => setAddress(ev.currentTarget.value)}
+            />
+          </div>
+          <div className="modal-action">
+            <Button
+              state={butttonState}
+              onClick={onClick({
+                isToken,
+                address,
+                amount,
+                txType,
+              })}
+              className="btn-primary"
+            >
+              {buttonContent}
+            </Button>
+          </div>
+        </label>
+      </label>
+    </>
+  )
+}
+
+export function GetTokensModal({
+  onClick,
+  butttonState,
+  headerContent,
+  buttonContent,
+  isToken = false,
+  id,
+  txType,
+}: Props) {
+  const [address, setAddress] = React.useState<string | undefined>();
+  const [amount, setAmount] = React.useState<string | undefined>();
+
+  return (
+    <>
+    <input type="checkbox" id={id} className="modal-toggle" />
+      <label htmlFor={id} className="modal cursor-pointer">
+        <label className="modal-box relative" htmlFor="">
+          <h3 className="font-bold text-xl mb-2">{headerContent}</h3>
+          <div className="form-control w-full mb-2">
+            <label className="label">
+              <span className="label-text">Mint Address</span>
+            </label>
+            <input
+              type="text"
+              placeholder={DEFAULT_WALLET}
+              className="input input-bordered w-full"
+              onChange={(ev) => setAddress(ev.currentTarget.value)}
+            />
+          </div>
+          <div className="modal-action">
+            <Button
+              state={butttonState}
+              onClick={onClick({
+                isToken,
+                address,
+                amount,
+                txType,
+              })}
+              className="btn-primary"
+            >
+              {buttonContent}
+            </Button>
+          </div>
+        </label>
+      </label>
+    </>
+  )
 }

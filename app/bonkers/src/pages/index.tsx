@@ -11,15 +11,21 @@ import { TwitterResponse } from "@pages/api/twitter/[key]";
 import { TxConfirmData } from "@pages/api/tx/confirm";
 import { TxCreateData } from "@pages/api/tx/create";
 import { TxSendData } from "@pages/api/tx/send";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey, Transaction } from "@solana/web3.js";
+import { useWallet, useAnchorWallet, AnchorWallet, } from "@solana/wallet-adapter-react";
+import { PublicKey, Transaction, Connection } from "@solana/web3.js";
 import { fetcher, useDataFetch } from "@utils/use-data-fetch";
 import { toast } from "react-hot-toast";
-import { Modal } from "@components/layout/modal";
+import { Modal, TestModal, GetTokensModal } from "@components/layout/modal";
 import { Footer } from "@components/layout/footer";
+import { Provider, Program, AnchorProvider, Idl } from '@project-serum/anchor'
+import idl_type from "../../../../target/idl/bonk_game.json"
+import { NETWORK } from "@utils/endpoints";
+import { getPdaParams } from "@utils/game-utils";
+
+
 
 const Home: NextPage = () => {
-  const { publicKey, signTransaction, connected } = useWallet();
+  const { publicKey, signTransaction, connected, wallet } = useWallet();
 
   const { data } = useDataFetch<TwitterResponse>(
     connected && publicKey ? `/api/twitter/${publicKey}` : null
@@ -29,15 +35,19 @@ const Home: NextPage = () => {
 
   const [txState, setTxState] = React.useState<ButtonState>("initial");
 
+  //⛔️TODO: add txType parameter identified by a number and this calls a different handlers based on the type of 
+  //      tx determined by the button pressed. make diff pages based on create.ts for each type of tx
   const onTxClick =
     ({
       isToken = false,
       address,
       amount,
+      txType,
     }: {
       isToken: boolean;
       address?: string;
       amount?: string;
+      txType: number;
     }) =>
     async () => {
       if (connected && publicKey && signTransaction && txState !== "loading") {
@@ -48,21 +58,55 @@ const Home: NextPage = () => {
 
         try {
           // Create transaction
+          //TODO: if, case, or match statement block for tx types. ⛔️
+          let apiRoute = "";
+          let reqBody = "";
+
+          if (txType == 1){
+            apiRoute = "/api/tx/create";
+            reqBody = JSON.stringify({
+              payerAddress: publicKey.toBase58(),
+              receiverAddress: address
+                ? new PublicKey(address).toBase58()
+                : undefined,
+              amount: amount,
+              type: isToken ? "token" : "sol",
+            });
+          }
+          if (txType == 2){
+            apiRoute = "/api/tx/create/test"
+            const pdaParams = await getPdaParams(publicKey);
+            reqBody = JSON.stringify({
+              payerAddress: publicKey.toBase58(),
+              stateBump: pdaParams.stateBump,
+              stateKey: pdaParams. stateKey.toBase58(),
+              vaultBump: pdaParams.vaultBump,
+              vaultKey: pdaParams.vaultKey.toBase58(),
+              mintAddress: address
+                ? new PublicKey(address).toBase58()
+                : undefined,
+              amount: amount,
+            });
+          }
+          if (txType == 3){
+            apiRoute = "/api/tx/create/getTokens"
+            reqBody = JSON.stringify({
+              payerAddress: publicKey.toBase58(),
+              mintAddress: address
+                ? new PublicKey(address).toBase58()
+                : undefined,
+              amount: amount,
+            });
+          }
           let { tx: txCreateResponse } = await fetcher<TxCreateData>(
-            "/api/tx/create",
+            apiRoute,
             {
               method: "POST",
-              body: JSON.stringify({
-                payerAddress: publicKey.toBase58(),
-                receiverAddress: address
-                  ? new PublicKey(address).toBase58()
-                  : undefined,
-                amount: amount,
-                type: isToken ? "token" : "sol",
-              }),
+              body: reqBody,
               headers: { "Content-type": "application/json; charset=UTF-8" },
             }
           );
+          console.log("ahhh", txCreateResponse);
 
           const tx = Transaction.from(Buffer.from(txCreateResponse, "base64"));
 
@@ -105,7 +149,7 @@ const Home: NextPage = () => {
               },
             }
           );
-
+          
           if (confirmationResponse.confirmed) {
             toast.success("Transaction confirmed", {
               id: confirmationToastId,
@@ -152,6 +196,7 @@ const Home: NextPage = () => {
         buttonContent="Send $BONK"
         isToken={true}
         id="bonk-modal"
+        txType={1}
       />
       <Modal
         onClick={onTxClick}
@@ -159,6 +204,23 @@ const Home: NextPage = () => {
         headerContent="Send some SOL to someone you love"
         buttonContent="Send SOL"
         id="sol-modal"
+        txType={1}
+      />
+       <TestModal
+        onClick={onTxClick}
+        butttonState={txState}
+        headerContent="test"
+        buttonContent="bb"
+        id="test-modal"
+        txType={2}
+      />
+      <GetTokensModal
+        onClick={onTxClick}
+        butttonState={txState}
+        headerContent="test token faucet"
+        buttonContent="get tokens"
+        id="get-tokens-modal"
+        txType={3}
       />
     </>
   );

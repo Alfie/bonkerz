@@ -1,7 +1,7 @@
 [features]
 seeds = false
 [programs.localnet]
-bonk_game = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+bonk_game = "6meFHJwukF1ZEF8cPFzmjj3kAfuJ8ugEt8o7cEG2LoZ4"
 
 [programs.devnet]
 bonk_game = "6meFHJwukF1ZEF8cPFzmjj3kAfuJ8ugEt8o7cEG2LoZ4"

@@ -1,21 +1,40 @@
 import { useWallet } from "@solana/wallet-adapter-react";
-import React from "react";
+import React, { useEffect, useState} from "react";
 import { fetcher, useDataFetch } from "@utils/use-data-fetch";
 import { ItemList } from "@components/home/item-list";
+import { ActionList } from "@components/home/action-list";
 import { ItemData } from "@components/home/item";
 import { Button, ButtonState } from "@components/home/button";
 import { toast } from "react-hot-toast";
-import { Transaction } from "@solana/web3.js";
+import { Transaction, TransactionResponse } from "@solana/web3.js";
 import { SignCreateData } from "@pages/api/sign/create";
 import { SignValidateData } from "@pages/api/sign/validate";
+import { TxCreateData } from "@pages/api/tx/create";
+import { TxSendData } from "@pages/api/tx/send";
+import {ConfirmedSignatureInfo, Connection} from "@solana/web3.js";
+import { NETWORK } from "@utils/endpoints";
 
 export function HomeContent() {
   const { publicKey, signTransaction } = useWallet();
   const [signState, setSignState] = React.useState<ButtonState>("initial");
+  const [mintState, setMintState] = React.useState<ButtonState>("initial");
   const { data, error } = useDataFetch<Array<ItemData>>(
     publicKey && signState === "success" ? `/api/items/${publicKey}` : null
   );
+  const connection = new Connection(NETWORK);
   const prevPublickKey = React.useRef<string>(publicKey?.toBase58() || "");
+  const [txSigState, setTxSigState] = useState("");
+
+  const getSigs = async () =>  {
+    const txns: any[] = [];
+    if(publicKey){
+      const txnSigs = await connection.getSignaturesForAddress(publicKey);
+      txnSigs.forEach(({signature}) => txns.push(connection.getTransaction(signature)));
+      const resolvedTxns = await Promise.all(txns)
+      setTxSigState(JSON.stringify(resolvedTxns[0]));
+    }
+  }
+  getSigs();
 
   // Reset the state if wallet changes or disconnects
   React.useEffect(() => {
@@ -77,6 +96,52 @@ export function HomeContent() {
     setSignState("initial");
   };
 
+  const onMintClick = async () => {
+    if(publicKey && signTransaction && mintState == "initial"){
+      setMintState("loading");
+      const buttonToastId = toast.loading("Signing message...");
+      let { tx: txCreateResponse, } = await fetcher<TxCreateData>(
+        "/api/tx/create/createMint",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            publicKeyStr: publicKey.toBase58(),
+          }),
+          headers: { "Content-type": "application/json; charset=UTF-8" },
+        }
+      );
+
+      const tx = Transaction.from(Buffer.from(txCreateResponse, "base64"));
+
+      // Request signature from wallet
+      const signedTx = await signTransaction(tx);
+      const signedTxBase64 = signedTx.serialize().toString("base64");
+
+      // Send signed transaction
+      let { txSignature } = await fetcher<TxSendData>("/api/tx/send", {
+        method: "POST",
+        body: JSON.stringify({ signedTx: signedTxBase64 }),
+        headers: { "Content-type": "application/json; charset=UTF-8" },
+      });
+
+      console.log("sig: ", txSignature);
+
+      setMintState("success");
+      toast.success(
+        (t) => (
+          <a
+            href={`https://solscan.io/tx/${txSignature}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Transaction created
+          </a>
+        ),
+        { id: buttonToastId, duration: 10000 }
+      );
+    };
+  }
+
   if (error) {
     return (
       <p className="text-center p-4">
@@ -95,7 +160,20 @@ export function HomeContent() {
     <div className="grid grid-cols-1">
       {hasFetchedData ? (
         <div>
-          <ItemList items={data} />
+          <label
+              htmlFor="test-modal"
+              className="btn-ghost lg:btn mb-1 lg:mr-1 lg:mb-0"
+            >test button✨</label>
+            <Button
+              state={mintState}
+              onClick={onMintClick}
+              className="btn-ghost lg:btn mb-1 lg:mr-1 lg:mb-0"
+            >create test token⚠️</Button>
+            <label
+              htmlFor="get-tokens-modal"
+              className="btn-ghost lg:btn mb-1 lg:mr-1 lg:mb-0"
+            >get test tokens⚠️</label>
+          <label>{txSigState}</label>
         </div>
       ) : (
         <div className="text-center">
