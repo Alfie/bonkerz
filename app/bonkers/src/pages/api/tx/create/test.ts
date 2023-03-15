@@ -1,7 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
-import { BonkGame } from "../../../../../../../target/types/bonk_game";
-import * as idl_type from "../../../../../../../target/idl/bonk_game.json";
+import * as idl_type from "@utils/bonk_game.json";
 import {
     Connection,
     LAMPORTS_PER_SOL,

@@ -17,9 +17,6 @@ import { fetcher, useDataFetch } from "@utils/use-data-fetch";
 import { toast } from "react-hot-toast";
 import { Modal, TestModal, GetTokensModal } from "@components/layout/modal";
 import { Footer } from "@components/layout/footer";
-import { Provider, Program, AnchorProvider, Idl } from '@project-serum/anchor'
-import idl_type from "../../../../target/idl/bonk_game.json"
-import { NETWORK } from "@utils/endpoints";
 import { getPdaParams } from "@utils/game-utils";
 
 

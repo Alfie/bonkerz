@@ -1,7 +1,5 @@
 import * as anchor from "@project-serum/anchor";
-import { Program } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { BonkGame } from "../../../../target/types/bonk_game";
 
 const programPK = new PublicKey("6meFHJwukF1ZEF8cPFzmjj3kAfuJ8ugEt8o7cEG2LoZ4");
 
